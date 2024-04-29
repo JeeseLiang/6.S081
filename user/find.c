@@ -22,7 +22,7 @@ fmtname(char *path)
     return buf;
 }
 
-void ls(char *path)
+void find(char *path, char *path2)
 {
     char buf[512], *p;
     int fd;
@@ -31,60 +31,60 @@ void ls(char *path)
 
     if ((fd = open(path, 0)) < 0)
     {
-        fprintf(2, "ls: cannot open %s\n", path);
+        fprintf(2, "find: cannot open %s\n", path);
         return;
     }
 
     if (fstat(fd, &st) < 0)
     {
-        fprintf(2, "ls: cannot stat %s\n", path);
+        fprintf(2, "find: cannot stat %s\n", path);
         close(fd);
         return;
     }
 
-    switch (st.type)
+    if (st.type == T_DIR)
     {
-    case T_FILE:
-        printf("%s %d %d %l\n", fmtname(path), st.type, st.ino, st.size);
-        break;
-
-    case T_DIR:
         if (strlen(path) + 1 + DIRSIZ + 1 > sizeof buf)
         {
-            printf("ls: path too long\n");
-            break;
+            printf("find: path too long\n");
+            return;
         }
         strcpy(buf, path);
         p = buf + strlen(buf);
         *p++ = '/';
-        while (read(fd, &de, sizeof(de)) == sizeof(de))
+        while (read(fd, &de, sizeof(de)) == sizeof(de)) // 遍历目录下每个文件
         {
-            if (de.inum == 0)
+            if (de.inum == 0 || strcmp(de.name, ".") == 0 || strcmp(de.name, "..") == 0)
                 continue;
             memmove(p, de.name, DIRSIZ);
             p[DIRSIZ] = 0;
             if (stat(buf, &st) < 0)
             {
-                printf("ls: cannot stat %s\n", buf);
+                printf("find: cannot stat %s\n", buf);
                 continue;
             }
-            printf("%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
+            if (st.type == T_DIR)
+            {
+                find(buf, path2);
+            }
+            else if (strcmp(path2, de.name) == 0)
+            {
+                printf("%s\n", buf);
+            }
         }
-        break;
     }
     close(fd);
 }
 
 int main(int argc, char *argv[])
 {
-    int i;
-
-    if (argc < 2)
+    if (argc != 3)
     {
-        ls(".");
-        exit(0);
+        printf("usage : find <> <>\n");
+        return -1;
     }
-    for (i = 1; i < argc; i++)
-        ls(argv[i]);
+    char *path1 = argv[1];
+    char *path2 = argv[2];
+    find(path1, path2);
     exit(0);
 }

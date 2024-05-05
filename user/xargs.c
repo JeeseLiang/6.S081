@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
             {
                 wait(0);
             }
-            len = 0; // Reset buffer index for next line
+            len = 0;
         }
         else
         {

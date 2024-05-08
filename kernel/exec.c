@@ -118,6 +118,7 @@ int exec(char *path, char **argv)
     p->trapframe->sp = sp;         // initial stack pointer
     proc_freepagetable(oldpagetable, oldsz);
 
+    // print the pagetable info
     if (p->pid == 1)
     {
         vmprint(p->pagetable);

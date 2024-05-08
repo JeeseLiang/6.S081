@@ -449,4 +449,38 @@ int copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 
 void vmprint(pagetable_t p)
 {
+    printf("page table %p\n", p);
+    for (int i = 0; i < 512; i++)
+    {
+        pte_t t = p[i];
+        if (t & PTE_V)
+        { // 存在
+            printf("..%d: pte %p pa %p\n", i, t, PTE2PA(t));
+            pagetable_t p2 = (pagetable_t)PTE2PA(t);
+            for (int j = 0; j < 512; j++)
+            {
+                pte_t t2 = p2[j];
+                if (t2 & PTE_V)
+                {
+                    printf(".. ..%d: pte %p pa %p\n", j, t2, PTE2PA(t2));
+                    pagetable_t p3 = (pagetable_t)PTE2PA(t2);
+                    for (int k = 0; k < 512; k++)
+                    {
+                        pte_t t3 = p3[k];
+                        if (t3 & PTE_V)
+                        {
+                            printf(".. .. ..%d: pte %p pa %p\n", k, t3, PTE2PA(t3));
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+/*
+Virtual addr
+15 9 9 9 12 10
+
+Phyical addr
+44 12
+*/
